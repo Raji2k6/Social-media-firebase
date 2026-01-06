@@ -7,7 +7,7 @@ import {
   getDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { auth, db } from "../firebase/config";
+import { auth, db } from "../firebase";
 
 const CreatePost = () => {
   const [content, setContent] = useState("");
