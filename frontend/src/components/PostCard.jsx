@@ -6,7 +6,7 @@ import {
   increment,
   updateDoc,
 } from "firebase/firestore";
-import { auth, db } from "../firebase/config";
+import { auth, db } from "../firebase";
 
 const PostCard = ({ post }) => {
   const currentUser = auth.currentUser;

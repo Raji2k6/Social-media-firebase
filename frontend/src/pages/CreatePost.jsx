@@ -8,12 +8,16 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { uploadImage } from "../services/storage";
+import { updateDoc } from "firebase/firestore";
+
 
 const CreatePost = () => {
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
@@ -54,6 +58,20 @@ const CreatePost = () => {
 
     setLoading(true);
 
+    let uploadedImageUrl = "";
+    if (imageFile) {
+      setUploading(true);
+      try {
+        uploadedImageUrl = await uploadImage(imageFile);
+      } catch (err) {
+        setError("Image upload failed: " + err.message);
+        setLoading(false);
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
     try {
       const user = auth.currentUser;
       if (!user) {
@@ -66,7 +84,7 @@ const CreatePost = () => {
         userId: user.uid,
         username: username,
         content: content,
-        imageUrl: imageUrl || "",
+        imageUrl: uploadedImageUrl || "",
         likeCount: 0,
         createdAt: serverTimestamp(),
       });
@@ -119,24 +137,23 @@ const CreatePost = () => {
 
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">
-              Image URL (Optional)
+              Upload Image (Optional)
             </label>
             <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="Enter image URL"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files[0])}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          {imageUrl && (
+          </div>  
+          
+          {imageFile && (
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
               <img
-                src={imageUrl}
+                src={URL.createObjectURL(imageFile)}
                 alt="Preview"
-                className="w-full max-h-64 object-cover rounded-lg"
+                className="max-w-lg max-h-64 object-cover rounded-lg mx-auto block"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
@@ -147,10 +164,10 @@ const CreatePost = () => {
           <div className="flex gap-3">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-blue-300"
             >
-              {loading ? "Posting..." : "Post"}
+              {loading || uploading ? "Posting..." : "Post"}
             </button>
             <button
               type="button"

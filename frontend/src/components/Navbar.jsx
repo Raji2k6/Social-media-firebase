@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { auth } from "../firebase";
 
 const Navbar = () => {
   const navigate = useNavigate();

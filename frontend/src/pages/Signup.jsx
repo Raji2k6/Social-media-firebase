@@ -45,7 +45,7 @@ const Signup = () => {
 
       // Create user document in Firestore
       await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
+        userId: user.uid,
         name: name,
         email: email,
         photoURL: "",
@@ -60,8 +60,9 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+    <div className="min-h-screen bg-gray-100 py-8 px-4">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-8">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           Sign Up
         </h2>
@@ -142,6 +143,7 @@ const Signup = () => {
         </p>
       </div>
     </div>
+  </div>
   );
 };
 
