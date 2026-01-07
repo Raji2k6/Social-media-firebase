@@ -11,16 +11,22 @@ import {
   deleteDoc,
   increment,
   updateDoc,
+  addDoc,
+  where,
+  serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import "./Feed.css"; // Import the CSS file
+import "./Feed.css";
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
+  const [comments, setComments] = useState({});
+  const [commentText, setCommentText] = useState({});
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
+  /* ================= LOAD POSTS ================= */
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
@@ -34,141 +40,137 @@ const Feed = () => {
       orderBy("createdAt", "desc")
     );
 
-    const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
+    const unsubPosts = onSnapshot(postsQuery, async (snapshot) => {
       const postsData = await Promise.all(
         snapshot.docs.map(async (postDoc) => {
           const postData = postDoc.data();
           const likeDocRef = doc(db, "likes", `${user.uid}_${postDoc.id}`);
           const likeDoc = await getDoc(likeDocRef);
-          const isLiked = likeDoc.exists();
 
-          return { id: postDoc.id, ...postData, isLiked };
+          return {
+            id: postDoc.id,
+            ...postData,
+            isLiked: likeDoc.exists(),
+          };
         })
       );
       setPosts(postsData);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => unsubPosts();
   }, [navigate]);
 
-  const handleLike = async (postId, isCurrentlyLiked) => {
-    try {
-      const likeDocRef = doc(db, "likes", `${currentUser.uid}_${postId}`);
-      const postDocRef = doc(db, "posts", postId);
+  /* ================= LOAD COMMENTS ================= */
+  useEffect(() => {
+    const commentsQuery = query(
+      collection(db, "comments"),
+      orderBy("createdAt", "asc")
+    );
 
-      if (isCurrentlyLiked) {
-        await deleteDoc(likeDocRef);
-        await updateDoc(postDocRef, { likeCount: increment(-1) });
-      } else {
-        await setDoc(likeDocRef, {
-          postId: postId,
-          userId: currentUser.uid,
-          createdAt: new Date(),
-        });
-        await updateDoc(postDocRef, { likeCount: increment(1) });
-      }
-    } catch (err) {
-      console.error("Error toggling like:", err);
+    const unsubComments = onSnapshot(commentsQuery, (snapshot) => {
+      const grouped = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (!grouped[data.postId]) grouped[data.postId] = [];
+        grouped[data.postId].push({ id: doc.id, ...data });
+      });
+      setComments(grouped);
+    });
+
+    return () => unsubComments();
+  }, []);
+
+  /* ================= LIKE ================= */
+  const handleLike = async (postId, isLiked) => {
+    const likeRef = doc(db, "likes", `${currentUser.uid}_${postId}`);
+    const postRef = doc(db, "posts", postId);
+
+    if (isLiked) {
+      await deleteDoc(likeRef);
+      await updateDoc(postRef, { likeCount: increment(-1) });
+    } else {
+      await setDoc(likeRef, {
+        postId,
+        userId: currentUser.uid,
+        createdAt: new Date(),
+      });
+      await updateDoc(postRef, { likeCount: increment(1) });
     }
+  };
+
+  /* ================= ADD COMMENT ================= */
+  const handleCommentPost = async (postId) => {
+    const text = commentText[postId];
+    if (!text || !text.trim()) return;
+
+    await addDoc(collection(db, "comments"), {
+      postId,
+      userId: currentUser.uid,
+      text: text.trim(),
+      createdAt: serverTimestamp(),
+    });
+
+    setCommentText((prev) => ({ ...prev, [postId]: "" }));
   };
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "";
-    const date = timestamp.toDate();
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000);
-
+    const diff = Math.floor((new Date() - timestamp.toDate()) / 1000);
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
   };
 
-  if (loading) {
-    return (
-      <div className="feed-loading">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="feed-loading">Loading...</div>;
 
   return (
     <div className="feed-page">
       <div className="feed-container">
-        <div className="feed-header">
-          <h2 className="feed-title">Feed</h2>
-          <div className="feed-buttons">
-            <Link to="/create-post" className="btn-primary">
-              Create Post
-            </Link>
-            <Link to="/profile" className="btn-secondary">
-              Profile
-            </Link>
-          </div>
-        </div>
+        <h2 className="feed-title">Feed</h2>
 
-        <div className="posts-list">
-          {posts.map((post) => (
-            <div key={post.id} className="post-card">
-              <div className="post-content-wrapper">
-                {post.photoURL ? (
-                  <img
-                    src={post.photoURL}
-                    alt={post.username}
-                    className="post-user-image"
-                  />
-                ) : (
-                  <div className="post-avatar">
-                    {post.username?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="post-details">
-                  <div className="post-user-info">
-                    <h3 className="post-username">{post.username}</h3>
-                    <p className="post-timestamp">
-                      {formatTimestamp(post.createdAt)}
-                    </p>
-                  </div>
+        {posts.map((post) => (
+          <div key={post.id} className="post-card">
+            <h3>{post.username}</h3>
+            <p className="post-timestamp">{formatTimestamp(post.createdAt)}</p>
+            <p>{post.content}</p>
 
-                  <p className="post-text">{post.content}</p>
+            {post.imageUrl && (
+              <img src={post.imageUrl} className="post-image" />
+            )}
 
-                  {post.imageUrl && (
-                    <img
-                      src={post.imageUrl}
-                      alt="Post"
-                      className="post-image"
-                    />
-                  )}
+            <button
+              className={`post-like-btn ${post.isLiked ? "liked" : ""}`}
+              onClick={() => handleLike(post.id, post.isLiked)}
+            >
+              👍 {post.likeCount || 0}
+            </button>
 
-                  <div className="post-actions">
-                    <button
-                      onClick={() => handleLike(post.id, post.isLiked)}
-                      className={`post-like-btn ${post.isLiked ? "liked" : ""}`}
-                    >
-                      <span>👍</span>
-                      <span>{post.likeCount || 0}</span>
-                    </button>
-
-                    <button className="post-comment-btn">
-                      <span>💬</span>
-                      <span>Comments</span>
-                    </button>
-                  </div>
+            {/* COMMENTS */}
+            <div className="comments-section">
+              {(comments[post.id] || []).map((c) => (
+                <div key={c.id} className="comment">
+                  <strong>{c.userId === currentUser.uid ? "You" : "User"}:</strong>{" "}
+                  {c.text}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              ))}
 
-        {posts.length === 0 && (
-          <div className="no-posts">
-            <p>No posts yet</p>
-            <Link to="/create-post" className="btn-primary">
-              Create the first post
-            </Link>
+              <input
+                type="text"
+                placeholder="Write a comment..."
+                value={commentText[post.id] || ""}
+                onChange={(e) =>
+                  setCommentText((prev) => ({
+                    ...prev,
+                    [post.id]: e.target.value,
+                  }))
+                }
+              />
+              <button onClick={() => handleCommentPost(post.id)}>Post</button>
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
