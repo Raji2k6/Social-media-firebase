@@ -126,14 +126,28 @@ const Feed = () => {
   if (loading) return <div className="feed-loading">Loading...</div>;
 
   return (
-    <div className="feed-page">
-      <div className="feed-container">
-        <h2 className="feed-title">Feed</h2>
+  <div className="feed-page">
+    <div className="feed-container">
+      <h2 className="feed-title">Feed</h2>
 
+      {/* ✅ POSTS LIST WRAPPER */}
+      <div className="posts-list">
         {posts.map((post) => (
           <div key={post.id} className="post-card">
-            <h3>{post.username}</h3>
-            <p className="post-timestamp">{formatTimestamp(post.createdAt)}</p>
+            <div className="post-header">
+  <div className="post-avatar">
+    {post.username?.charAt(0).toUpperCase()}
+  </div>
+
+  <div className="post-user-meta">
+    <span className="post-username">{post.username}</span>
+    <span className="post-timestamp">
+      {formatTimestamp(post.createdAt)}
+    </span>
+  </div>
+</div>
+
+
             <p>{post.content}</p>
 
             {post.imageUrl && (
@@ -151,7 +165,9 @@ const Feed = () => {
             <div className="comments-section">
               {(comments[post.id] || []).map((c) => (
                 <div key={c.id} className="comment">
-                  <strong>{c.userId === currentUser.uid ? "You" : "User"}:</strong>{" "}
+                  <strong>
+                    {c.userId === currentUser.uid ? "You" : "User"}:
+                  </strong>{" "}
                   {c.text}
                 </div>
               ))}
@@ -167,13 +183,18 @@ const Feed = () => {
                   }))
                 }
               />
-              <button onClick={() => handleCommentPost(post.id)}>Post</button>
+              <button onClick={() => handleCommentPost(post.id)}>
+                Post
+              </button>
             </div>
           </div>
         ))}
       </div>
+      {/* ✅ END POSTS LIST */}
     </div>
-  );
+  </div>
+);
+
 };
 
 export default Feed;
