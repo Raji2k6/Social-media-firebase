@@ -2,14 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users collection
+    /* ================= USERS ================= */
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
       allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Posts collection
+    /* ================= POSTS ================= */
     match /posts/{postId} {
       allow read: if true;
 
@@ -17,20 +17,50 @@ service cloud.firestore {
                     && request.resource.data.userId == request.auth.uid;
 
       allow update: if request.auth != null
-                    && (request.auth.uid == resource.data.userId
-                        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount']));
+        && (
+          request.auth.uid == resource.data.userId
+          || request.resource.data.diff(resource.data)
+               .affectedKeys()
+               .hasOnly(['likeCount'])
+        );
 
       allow delete: if request.auth != null
                     && request.auth.uid == resource.data.userId;
     }
 
-    // Likes collection
+    /* ================= LIKES ================= */
     match /likes/{likeId} {
       allow read: if request.auth != null;
+
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid;
+
       allow delete: if request.auth != null
                     && resource.data.userId == request.auth.uid;
+    }
+
+    /* ================= COMMENTS ================= */
+    match /comments/{commentId} {
+
+      // Everyone logged in can read comments
+      allow read: if request.auth != null;
+
+      // Only logged-in user can create their own comment
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+             'postId',
+             'userId',
+             'text',
+             'createdAt'
+           ]);
+
+      // Only comment owner can delete
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
+      // No updates allowed (immutability)
+      allow update: if false;
     }
   }
 }
