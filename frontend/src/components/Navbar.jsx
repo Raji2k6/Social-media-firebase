@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
+import "./Navbar.css";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -17,46 +18,24 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo/Brand */}
-          <div className="flex-shrink-0">
-            <Link to="/feed" className="text-2xl font-bold text-blue-600">
-              SocialApp
-            </Link>
-          </div>
+    <nav className="navbar">
+      <div className="navbar-container">
+        {/* Logo */}
+        <Link to="/feed" className="navbar-logo">
+          SocialApp
+        </Link>
 
-          {/* Navigation Links */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/feed"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
-            >
-              Feed
-            </Link>
-            <Link
-              to="/create-post"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
-            >
-              Create Post
-            </Link>
-            <Link
-              to="/profile"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
-            >
-              Profile
-            </Link>
+        {/* Links */}
+        <div className="navbar-links">
+          <Link to="/feed">Feed</Link>
+          <Link to="/create-post">Create Post</Link>
+          <Link to="/profile">Profile</Link>
 
-            {user && (
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200 text-sm font-medium"
-              >
-                Logout
-              </button>
-            )}
-          </div>
+          {user && (
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          )}
         </div>
       </div>
     </nav>

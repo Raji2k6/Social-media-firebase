@@ -1,0 +1,209 @@
+/* Page container */
+.profile-page {
+  min-height: 100vh;
+  background-color: #f3f4f6; /* gray-100 */
+  padding: 32px 16px;
+}
+
+/* Loading state */
+.profile-loading {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f3f4f6;
+  color: #4b5563; /* gray-600 */
+}
+
+/* Profile container */
+.profile-container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Profile card */
+.profile-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-bottom: 24px;
+}
+
+/* Header */
+.profile-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 16px;
+}
+
+.profile-avatar-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 16px;
+}
+
+.profile-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937; /* gray-800 */
+}
+
+.profile-email {
+  color: #4b5563; /* gray-600 */
+}
+
+/* Logout button */
+.btn-logout {
+  background-color: #dc2626; /* red-600 */
+  color: white;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: #b91c1c; /* red-700 */
+}
+
+/* Posts title */
+.posts-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+/* Posts list */
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Post card */
+.post-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.post-content-wrapper {
+  display: flex;
+  gap: 16px;
+}
+
+.post-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.post-avatar-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.post-details {
+  flex: 1;
+}
+
+.post-user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.post-username {
+  font-weight: 600;
+  color: #1f2937;
+  margin-right: 8px;
+}
+
+.post-timestamp {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.post-text {
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.post-image {
+  max-width: 100%;
+  max-height: 24rem;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 16px;
+}
+
+/* Actions */
+.post-actions {
+  display: flex;
+  gap: 16px;
+  color: #4b5563;
+}
+
+.post-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* No posts */
+.no-posts {
+  background-color: white;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 16px;
+}
+
+.no-posts p {
+  color: #4b5563;
+  margin-bottom: 16px;
+}
+
+.no-posts .btn-primary {
+  background-color: #2563eb; /* blue-600 */
+  color: white;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.no-posts .btn-primary:hover {
+  background-color: #1d4ed8; /* blue-700 */
+}

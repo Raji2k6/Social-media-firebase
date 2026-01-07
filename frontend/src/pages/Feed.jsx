@@ -13,6 +13,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import "./Feed.css"; // Import the CSS file
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
@@ -28,7 +29,6 @@ const Feed = () => {
     }
     setCurrentUser(user);
 
-    // Real-time listener for posts
     const postsQuery = query(
       collection(db, "posts"),
       orderBy("createdAt", "desc")
@@ -38,17 +38,11 @@ const Feed = () => {
       const postsData = await Promise.all(
         snapshot.docs.map(async (postDoc) => {
           const postData = postDoc.data();
-
-          // Check if current user liked this post
           const likeDocRef = doc(db, "likes", `${user.uid}_${postDoc.id}`);
           const likeDoc = await getDoc(likeDocRef);
           const isLiked = likeDoc.exists();
 
-          return {
-            id: postDoc.id,
-            ...postData,
-            isLiked,
-          };
+          return { id: postDoc.id, ...postData, isLiked };
         })
       );
       setPosts(postsData);
@@ -64,21 +58,15 @@ const Feed = () => {
       const postDocRef = doc(db, "posts", postId);
 
       if (isCurrentlyLiked) {
-        // Unlike
         await deleteDoc(likeDocRef);
-        await updateDoc(postDocRef, {
-          likeCount: increment(-1),
-        });
+        await updateDoc(postDocRef, { likeCount: increment(-1) });
       } else {
-        // Like
         await setDoc(likeDocRef, {
           postId: postId,
           userId: currentUser.uid,
           createdAt: new Date(),
         });
-        await updateDoc(postDocRef, {
-          likeCount: increment(1),
-        });
+        await updateDoc(postDocRef, { likeCount: increment(1) });
       }
     } catch (err) {
       console.error("Error toggling like:", err);
@@ -89,7 +77,7 @@ const Feed = () => {
     if (!timestamp) return "";
     const date = timestamp.toDate();
     const now = new Date();
-    const diff = Math.floor((now - date) / 1000); // difference in seconds
+    const diff = Math.floor((now - date) / 1000);
 
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
@@ -99,79 +87,70 @@ const Feed = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Loading...</p>
+      <div className="feed-loading">
+        <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Feed</h2>
-          <div className="flex gap-3">
-            <Link
-              to="/create-post"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
-            >
+    <div className="feed-page">
+      <div className="feed-container">
+        <div className="feed-header">
+          <h2 className="feed-title">Feed</h2>
+          <div className="feed-buttons">
+            <Link to="/create-post" className="btn-primary">
               Create Post
             </Link>
-            <Link
-              to="/profile"
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200"
-            >
+            <Link to="/profile" className="btn-secondary">
               Profile
             </Link>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="posts-list">
           {posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex gap-4">
+            <div key={post.id} className="post-card">
+              <div className="post-content-wrapper">
                 {post.photoURL ? (
                   <img
                     src={post.photoURL}
                     alt={post.username}
-                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                    className="post-user-image"
                   />
                 ) : (
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                  <div className="post-avatar">
                     {post.username?.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <h3 className="font-semibold text-gray-800 mr-2">
-                      {post.username}
-                    </h3>
-                    <p className="text-sm text-gray-500">
+                <div className="post-details">
+                  <div className="post-user-info">
+                    <h3 className="post-username">{post.username}</h3>
+                    <p className="post-timestamp">
                       {formatTimestamp(post.createdAt)}
                     </p>
                   </div>
 
-                  <p className="text-gray-800 mb-4">{post.content}</p>
+                  <p className="post-text">{post.content}</p>
 
                   {post.imageUrl && (
                     <img
                       src={post.imageUrl}
                       alt="Post"
-                      className="max-w-lg rounded-lg mb-4 max-h-96 object-cover mx-auto block"
+                      className="post-image"
                     />
                   )}
 
-                  <div className="flex gap-4 text-gray-600">
+                  <div className="post-actions">
                     <button
                       onClick={() => handleLike(post.id, post.isLiked)}
-                      className={`flex items-center gap-1 transition duration-200 ${
-                        post.isLiked ? "text-blue-600" : "hover:text-blue-600"
-                      }`}
+                      className={`post-like-btn ${post.isLiked ? "liked" : ""}`}
                     >
-                      <span>{post.isLiked ? "👍" : "👍"}</span>
+                      <span>👍</span>
                       <span>{post.likeCount || 0}</span>
                     </button>
-                    <button className="flex items-center gap-1 hover:text-blue-600 transition duration-200">
+
+                    <button className="post-comment-btn">
                       <span>💬</span>
                       <span>Comments</span>
                     </button>
@@ -183,12 +162,9 @@ const Feed = () => {
         </div>
 
         {posts.length === 0 && (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-gray-600 mb-4">No posts yet</p>
-            <Link
-              to="/create-post"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
-            >
+          <div className="no-posts">
+            <p>No posts yet</p>
+            <Link to="/create-post" className="btn-primary">
               Create the first post
             </Link>
           </div>

@@ -11,6 +11,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import "./Profile.css"; // Import CSS file
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -25,7 +26,6 @@ const Profile = () => {
       return;
     }
 
-    // Fetch user data
     const fetchUser = async () => {
       try {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
@@ -39,7 +39,6 @@ const Profile = () => {
 
     fetchUser();
 
-    // Fetch user's posts
     const postsQuery = query(
       collection(db, "posts"),
       where("userId", "==", currentUser.uid),
@@ -81,83 +80,71 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Loading...</p>
+      <div className="profile-loading">
+        <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-          <div className="flex items-center mb-4">
+    <div className="profile-page">
+      <div className="profile-container">
+        <div className="profile-card">
+          <div className="profile-header">
             {user?.photoURL ? (
               <img
                 src={user.photoURL}
                 alt={user.name}
-                className="w-16 h-16 rounded-full object-cover mr-4"
+                className="profile-avatar"
               />
             ) : (
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+              <div className="profile-avatar-fallback">
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
             )}
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">{user?.name}</h2>
-              <p className="text-gray-600">{user?.email}</p>
+              <h2 className="profile-name">{user?.name}</h2>
+              <p className="profile-email">{user?.email}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200"
-          >
+          <button onClick={handleLogout} className="btn-logout">
             Logout
           </button>
         </div>
 
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Your Posts</h3>
-        <div className="space-y-4">
+        <h3 className="posts-title">Your Posts</h3>
+        <div className="posts-list">
           {posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex gap-4">
+            <div key={post.id} className="post-card">
+              <div className="post-content-wrapper">
                 {user?.photoURL ? (
                   <img
                     src={user.photoURL}
                     alt={user.name}
-                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                    className="post-avatar"
                   />
                 ) : (
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                  <div className="post-avatar-fallback">
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <h3 className="font-semibold text-gray-800 mr-2">
-                      {user?.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">
+                <div className="post-details">
+                  <div className="post-user-info">
+                    <h3 className="post-username">{user?.name}</h3>
+                    <p className="post-timestamp">
                       {formatTimestamp(post.createdAt)}
                     </p>
                   </div>
-
-                  <p className="text-gray-800 mb-4">{post.content}</p>
-
+                  <p className="post-text">{post.content}</p>
                   {post.imageUrl && (
-                    <img
-                      src={post.imageUrl}
-                      alt="Post"
-                      className="max-w-lg rounded-lg mb-4 max-h-96 object-cover mx-auto block"
-                    />
+                    <img src={post.imageUrl} alt="Post" className="post-image" />
                   )}
-
-                  <div className="flex gap-4 text-gray-600">
-                    <span className="flex items-center gap-1">
+                  <div className="post-actions">
+                    <span className="post-action">
                       <span>👍</span>
                       <span>{post.likeCount || 0}</span>
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span className="post-action">
                       <span>💬</span>
                       <span>Comments</span>
                     </span>
@@ -169,11 +156,11 @@ const Profile = () => {
         </div>
 
         {posts.length === 0 && (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-gray-600 mb-4">You haven't posted anything yet</p>
+          <div className="no-posts">
+            <p>You haven't posted anything yet</p>
             <button
               onClick={() => navigate("/create-post")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+              className="btn-primary"
             >
               Create Your First Post
             </button>

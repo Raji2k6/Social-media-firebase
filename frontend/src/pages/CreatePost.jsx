@@ -6,11 +6,11 @@ import {
   doc,
   getDoc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { uploadImage } from "../services/storage";
-import { updateDoc } from "firebase/firestore";
-
+import "./CreatePost.css"; // Import the CSS file
 
 const CreatePost = () => {
   const [content, setContent] = useState("");
@@ -28,7 +28,6 @@ const CreatePost = () => {
         navigate("/login");
         return;
       }
-
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
@@ -38,7 +37,6 @@ const CreatePost = () => {
         console.error("Error fetching username:", err);
       }
     };
-
     fetchUsername();
   }, [navigate]);
 
@@ -50,14 +48,12 @@ const CreatePost = () => {
       setError("Post content cannot be empty");
       return;
     }
-
     if (content.length > 500) {
       setError("Post content must be less than 500 characters");
       return;
     }
 
     setLoading(true);
-
     let uploadedImageUrl = "";
     if (imageFile) {
       setUploading(true);
@@ -79,7 +75,6 @@ const CreatePost = () => {
         return;
       }
 
-      // Create post document in Firestore
       const postRef = await addDoc(collection(db, "posts"), {
         userId: user.uid,
         username: username,
@@ -89,10 +84,7 @@ const CreatePost = () => {
         createdAt: serverTimestamp(),
       });
 
-      // Update the post with its own ID
-      await updateDoc(postRef, {
-        postId: postRef.id,
-      });
+      await updateDoc(postRef, { postId: postRef.id });
 
       navigate("/feed");
     } catch (err) {
@@ -106,73 +98,59 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">
-          Create New Post
-        </h2>
+    <div className="create-post-page">
+      <div className="create-post-container">
+        <h2 className="create-post-title">Create New Post</h2>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              What's on your mind?
-            </label>
+          <div className="form-group">
+            <label className="form-label">What's on your mind?</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Share your thoughts..."
               rows="6"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="form-textarea"
             />
-            <p className="text-sm text-gray-500 mt-2">
-              {content.length}/500 characters
-            </p>
+            <p className="char-count">{content.length}/500 characters</p>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Upload Image (Optional)
-            </label>
+          <div className="form-group">
+            <label className="form-label">Upload Image (Optional)</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setImageFile(e.target.files[0])}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
             />
-          </div>  
-          
+          </div>
+
           {imageFile && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
+            <div className="image-preview-container">
+              <p className="preview-label">Image Preview:</p>
               <img
                 src={URL.createObjectURL(imageFile)}
                 alt="Preview"
-                className="max-w-lg max-h-64 object-cover rounded-lg mx-auto block"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
+                className="image-preview"
+                onError={(e) => (e.target.style.display = "none")}
               />
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="form-buttons">
             <button
               type="submit"
               disabled={loading || uploading}
-              className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-blue-300"
+              className="btn-primary"
             >
               {loading || uploading ? "Posting..." : "Post"}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-gray-400 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-500 transition duration-200"
+              className="btn-secondary"
             >
               Cancel
             </button>
